@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GenericDaoInMemory implements BookDao{
+public class BookDaoInMemory implements Dao<Book>{
     Map<Integer, Book> books = new HashMap<>();
     int idCounter = 0;
 

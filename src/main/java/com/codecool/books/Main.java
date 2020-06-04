@@ -17,7 +17,8 @@ public class Main {
     }
 
     UserInterface ui;
-    AuthorDao authorDao;
+    Dao<Author> authorDao;
+    Dao<Book> bookDao;
 
     Main(UserInterface ui) {
         this.ui = ui;
@@ -38,7 +39,7 @@ public class Main {
                     new AuthorManager(ui, authorDao).run();
                     break;
                 case 'b':
-                    ui.println("Not implemented yet!");
+                    new BookManager(ui, bookDao, authorDao).run();
                     break;
                 case 'q':
                     running = false;
@@ -54,12 +55,14 @@ public class Main {
             case 'i':
                 ui.println("Using in-memory database");
                 authorDao = new AuthorDaoInMemory();
+                bookDao = new BookDaoInMemory();
                 createInitialData();
                 break;
             case 'j':
                 ui.println("Using JDBC");
                 DataSource dataSource = connect();
                 authorDao = new AuthorDaoJDBC(dataSource);
+                bookDao = new BookDaoJDBC(dataSource);
                 break;
         }
     }
@@ -69,8 +72,8 @@ public class Main {
 
         // TODO: update database parameters
         dataSource.setDatabaseName("books");
-        dataSource.setUser("pawel");
-        dataSource.setPassword("pawel");
+        dataSource.setUser("");
+        dataSource.setPassword("");
 
         ui.println("Trying to connect...");
         dataSource.getConnection().close();
@@ -93,14 +96,13 @@ public class Main {
         authorDao.add(author3);
         authorDao.add(author4);
 
-        /*
         bookDao.add(new Book(author1, "Hobbit"));
         bookDao.add(new Book(author1, "Lord of the Rings"));
         bookDao.add(new Book(author2, "Hitchhiker's Guide to the Galaxy"));
         bookDao.add(new Book(author3, "A Game of Thrones"));
         bookDao.add(new Book(author3, "Tuf Voyaging"));
         bookDao.add(new Book(author4, "Dune"));
-         */
+
     }
 
 }
