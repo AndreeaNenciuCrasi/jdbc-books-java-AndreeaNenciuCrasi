@@ -15,18 +15,100 @@ public class AuthorDaoJDBC implements Dao<Author> {
 
     @Override
     public void add(Author author) {
-        // TODO
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            connection = dataSource.getConnection();
+            statement = connection.createStatement();
+            String query = String.format("INSERT INTO author (first_name, last_name, birth_date) VALUES ('%s', '%s', '%s');",
+                    author.getFirstName(), author.getLastName(), author.getBirthDate());
+            statement.executeUpdate(query);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //finally block used to close resources
+            try {
+                if (statement != null)
+                    connection.close();
+            } catch (SQLException e) {
+            }// do nothing
+            try {
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     public void update(Author author) {
-        // TODO
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            connection = dataSource.getConnection();
+            statement = connection.createStatement();
+            String query = String.format("UPDATE author SET " +
+                            "(first_name, last_name, birth_date) = ('%s','%s', '%s') WHERE author.id = '%d'",
+                    author.getFirstName(), author.getLastName(), author.getBirthDate(), author.getId());
+            statement.executeUpdate(query);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //finally block used to close resources
+            try {
+                if (statement != null)
+                    connection.close();
+            } catch (SQLException e) {
+            }// do nothing
+            try {
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     public Author get(int id) {
-        // TODO
-        return null;
+        Connection connection = null;
+        Statement statement = null;
+        Author author = null;
+
+        try {
+            connection = dataSource.getConnection();
+            statement = connection.createStatement();
+            String query = String.format("SELECT * FROM author WHERE author.id = '%d';", id);
+            ResultSet resultSet = statement.executeQuery(query);
+            while (resultSet.next()) {
+                String firstName = resultSet.getString("first_name");
+                String lastName = resultSet.getString("last_name");
+                Date birthDate = resultSet.getDate("birth_date");
+                author = new Author(firstName, lastName, birthDate);
+                author.setId(id);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //finally block used to close resources
+            try {
+                if (statement != null)
+                    connection.close();
+            } catch (SQLException e) {
+            }// do nothing
+            try {
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return author;
     }
 
     @Override
@@ -48,11 +130,6 @@ public class AuthorDaoJDBC implements Dao<Author> {
                 Author author = new Author(firstName, lastName,birthDate);
                 author.setId(id);
                 authors.add(author);
-
-//                System.out.println("id" + id);
-//                System.out.println("first name" + firstName);
-//                System.out.println("last name" + lastName);
-//                System.out.println("birth date" + birthDate);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -70,8 +147,6 @@ public class AuthorDaoJDBC implements Dao<Author> {
                 e.printStackTrace();
             }
         }
-        System.out.println("Goodbye!");
-
         return authors;
     }
 }
