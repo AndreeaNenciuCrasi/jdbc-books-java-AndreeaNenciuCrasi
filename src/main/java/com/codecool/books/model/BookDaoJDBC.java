@@ -15,98 +15,61 @@ public class BookDaoJDBC implements Dao<Book>{
 
     @Override
     public void add(Book book) {
-        Connection connection = null;
-        Statement statement = null;
-
         try {
-            connection = dataSource.getConnection();
-            statement = connection.createStatement();
-            String query = String.format("INSERT INTO book (id, author_id, title) VALUES ('%d', '%d', '%s');",
-                    book.getId(), book.getAuthor().getId(), book.getTitle());
-            statement.executeUpdate(query);
+            Connection connection = dataSource.getConnection();
+            String sql = "INSERT INTO book (author_id, title) VALUES (?,?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, book.getAuthor().getId());
+            preparedStatement.setString(2, book.getTitle());
+            preparedStatement.executeUpdate();
 
-        } catch (SQLException e) {
+            preparedStatement.close();
+            connection.close();
+        }catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            //finally block used to close resources
-            try {
-                if (statement != null)
-                    connection.close();
-            } catch (SQLException e) {
-            }// do nothing
-            try {
-                if (connection != null)
-                    connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
     @Override
     public void update(Book book) {
-        Connection connection = null;
-        Statement statement = null;
-
-        try {
-            connection = dataSource.getConnection();
-            statement = connection.createStatement();
-            String query = String.format("UPDATE author SET " +
-                            "(id, author_is, title) = ('%d','%d', '%s') WHERE book.id = '%d'",
-                    book.getId(), book.getAuthor().getId(), book.getTitle());
-            statement.executeUpdate(query);
+        try{
+        Connection connection = dataSource.getConnection();
+        String sql = "UPDATE book SET author_id = ?, title = ? where id = ?";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setInt(1,book.getAuthor().getId());
+        preparedStatement.setString(2,book.getTitle());
+        preparedStatement.setInt(3,book.getId());
+        preparedStatement.executeUpdate();
+        preparedStatement.close();
+        connection.close();
 
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            //finally block used to close resources
-            try {
-                if (statement != null)
-                    connection.close();
-            } catch (SQLException e) {
-            }// do nothing
-            try {
-                if (connection != null)
-                    connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
     @Override
     public Book get(int id) {
-        Connection connection = null;
-        Statement statement = null;
         Book book = null;
+        try{
+        Connection connection = dataSource.getConnection();
+        String sql ="Select * from book where id=?";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setInt(1,id);
+        ResultSet resultSet = preparedStatement.executeQuery();
 
-        try {
-            connection = dataSource.getConnection();
-            statement = connection.createStatement();
-            String query = String.format("SELECT * FROM book WHERE book.id = '%d';", id);
-            ResultSet resultSet = statement.executeQuery(query);
-            while (resultSet.next()) {
-                int authorId = resultSet.getInt("author_id");
-                String title = resultSet.getString("title");
+        while (resultSet.next()){
+            int authorId = resultSet.getInt("author_id");
+            String title = resultSet.getString("title");
+            book = new Book(authorDao.get(authorId),title);
+            book.setId(id);
+        }
 
-                book = new Book(authorDao.get(authorId),title);
-                book.setId(id);
-            }
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            //finally block used to close resources
-            try {
-                if (statement != null)
-                    connection.close();
-            } catch (SQLException e) {
-            }// do nothing
-            try {
-                if (connection != null)
-                    connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
         return book;
     }
@@ -119,18 +82,19 @@ public class BookDaoJDBC implements Dao<Book>{
 
         try {
             connection = dataSource.getConnection();
+            String sql = "SELECT * FROM book";
             statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
 
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM book;");
-            while (resultSet.next()) {
+            while (resultSet.next()){
                 int id = resultSet.getInt("id");
                 int authorId = resultSet.getInt("author_id");
                 String title = resultSet.getString("title");
-
                 Book book = new Book(authorDao.get(authorId),title);
                 book.setId(id);
                 books.add(book);
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
